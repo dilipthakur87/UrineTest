@@ -14,9 +14,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f735f410-103b-460a-af4e-efe26d59af61" name="Default" comment="Merge branch 'master' of https://github.com/dilipthakur87/UrineTest&#10;&#10;# Conflicts:&#10;#&#9;.gitignore&#10;merge conflicts">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-    </list>
+    <list default="true" id="f735f410-103b-460a-af4e-efe26d59af61" name="Default" comment="Merge branch 'master' of https://github.com/dilipthakur87/UrineTest&#10;&#10;# Conflicts:&#10;#&#9;.gitignore&#10;merge conflicts" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -3626,7 +3624,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="Android Profiler" order="7" weight="0.32969698" />
       <window_info anchor="bottom" id="TODO" order="6" />
