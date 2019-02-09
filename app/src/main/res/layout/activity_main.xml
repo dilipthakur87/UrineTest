@@ -8,24 +8,24 @@
     android:paddingLeft="10dp"
     android:paddingRight="10dp">
 
-    <org.opencv.android.JavaCameraView
+    <!--<org.opencv.android.JavaCameraView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:id="@+id/cameraViewer"/>-->
+
+    <Button
+        android:id="@+id/btnTakePicture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Take a Photo"
+        android:textStyle="bold"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true" />
+
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/cameraViewer"/>
-
-    <!--<Button-->
-        <!--android:id="@+id/btnTakePicture"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="Take a Photo"-->
-        <!--android:textStyle="bold"-->
-        <!--android:layout_centerHorizontal="true"-->
-        <!--android:layout_alignParentBottom="true" />-->
-
-    <!--<ImageView-->
-        <!--android:layout_width="fill_parent"-->
-        <!--android:layout_height="fill_parent"-->
-        <!--android:id="@+id/capturedImage"-->
-        <!--android:layout_above="@+id/btnTakePicture"/>-->
+        android:id="@+id/capturedImage"
+        android:layout_above="@+id/btnTakePicture"/>
 
 </RelativeLayout>

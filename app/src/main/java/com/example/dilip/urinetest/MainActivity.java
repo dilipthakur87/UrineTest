@@ -17,6 +17,7 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -27,16 +28,17 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class MainActivity extends AppCompatActivity  {
 
     // defining the variables
-//    private Button btnCapture;
-//    private ImageView imgCapture;
-//    private static final int Image_Capture_Code = 1;
+    private Button btnCapture;
+    private ImageView imgCapture;
+    private static final int Image_Capture_Code = 1;
 
     //view holder
     CameraBridgeViewBase cameraBridgeViewBase;
@@ -45,8 +47,12 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     BaseLoaderCallback baseLoaderCallback;
 
     //image holder
-    Mat bwIMG, hsvIMG, lrrIMG, urrIMG, dsIMG, usIMG, cIMG, hovIMG;
-    MatOfPoint2f approxCurve;
+    public Mat original_image, initial_image;
+
+    // initial contours
+    List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+
+    final Size kernelSize = new Size(7,7);
 
     int threshold;
 
@@ -55,198 +61,156 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        // initializing the variables
-//        btnCapture = (Button) findViewById(R.id.btnTakePicture);
-//        imgCapture = (ImageView) findViewById(R.id.capturedImage);
-//
-//        if (!OpenCVLoader.initDebug()) {
-//            Log.e(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), not working.");
-//        } else {
-//            Log.d(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), working.");
-//        }
-//
-//        // setting onClickListener for the button
-//        btnCapture.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//                startActivityForResult(captureIntent, Image_Capture_Code); //Image_Capture_Code is a locally defined integer that must be greater than 0
-//            }
-//        });
+        // initializing the variables
+        btnCapture = findViewById(R.id.btnTakePicture);
+        imgCapture = findViewById(R.id.capturedImage);
 
 
-        //initialize treshold
-        threshold = 100;
-
-        cameraBridgeViewBase = (JavaCameraView) findViewById(R.id.cameraViewer);
-        cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
-        cameraBridgeViewBase.setCvCameraViewListener(this);
-
-        //create camera listener callback
-        baseLoaderCallback = new BaseLoaderCallback(this) {
-            @Override
-            public void onManagerConnected(int status) {
-                switch (status) {
-                    case LoaderCallbackInterface.SUCCESS:
-                        Log.v("aashari-log", "Loader interface success");
-                        bwIMG = new Mat();
-                        dsIMG = new Mat();
-                        hsvIMG = new Mat();
-                        lrrIMG = new Mat();
-                        urrIMG = new Mat();
-                        usIMG = new Mat();
-                        cIMG = new Mat();
-                        hovIMG = new Mat();
-                        approxCurve = new MatOfPoint2f();
-                        cameraBridgeViewBase.enableView();
-                        break;
-                    default:
-                        super.onManagerConnected(status);
-                        break;
-                }
-            }
-        };
-
-    }
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data){
-//        if (requestCode == Image_Capture_Code){
-//            // if image is captured
-//            if (resultCode == RESULT_OK){
-//                //setting the captures image to the image view
-//                Bitmap bp = (Bitmap) data.getExtras().get("data");
-//                imgCapture.setImageBitmap(bp);
-//            }
-//            else if (resultCode == RESULT_CANCELED) {
-//                //on cancel
-//                Toast.makeText(MainActivity.this, "Cancelled", Toast.LENGTH_SHORT).show();
-//            }
-//            else {
-//                Toast.makeText(this, "Some error occured", Toast.LENGTH_SHORT).show();
-//            }
-//        }
-//        else {
-//            Toast.makeText(this, "Some error occured", Toast.LENGTH_SHORT).show();
-//        }
-//    }
+        // initializing the image holder
+//        original_image = new Mat();
 
 
-    @Override
-    public void onCameraViewStarted(int width, int height) {
-
-    }
-
-    @Override
-    public void onCameraViewStopped() {
-
-    }
-
-    @Override
-    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-
-        Mat gray = inputFrame.gray();
-        Mat dst = inputFrame.rgba();
-
-        Imgproc.pyrDown(gray, dsIMG, new Size(gray.cols() / 2, gray.rows() / 2));
-        Imgproc.pyrUp(dsIMG, usIMG, gray.size());
-
-        Imgproc.Canny(usIMG, bwIMG, 0, threshold);
-
-        Imgproc.dilate(bwIMG, bwIMG, new Mat(), new Point(-1, 1), 1);
-
-        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-
-        cIMG = bwIMG.clone();
-
-        Imgproc.findContours(cIMG, contours, hovIMG, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-
-        for (MatOfPoint cnt : contours) {
-
-            MatOfPoint2f curve = new MatOfPoint2f(cnt.toArray());
-
-            Imgproc.approxPolyDP(curve, approxCurve, 0.02 * Imgproc.arcLength(curve, true), true);
-
-            int numberVertices = (int) approxCurve.total();
-
-            double contourArea = Imgproc.contourArea(cnt);
-
-            if (Math.abs(contourArea) < 100) {
-                continue;
-            }
-
-            //Rectangle detected
-            if (numberVertices >= 4 && numberVertices <= 6) {
-
-                List<Double> cos = new ArrayList<>();
-
-                for (int j = 2; j < numberVertices + 1; j++) {
-                    cos.add(angle(approxCurve.toArray()[j % numberVertices], approxCurve.toArray()[j - 2], approxCurve.toArray()[j - 1]));
-                }
-
-                Collections.sort(cos);
-
-                double mincos = cos.get(0);
-                double maxcos = cos.get(cos.size() - 1);
-
-                if (numberVertices == 4 && mincos >= -0.1 && maxcos <= 0.3) {
-                    setLabel(dst, "X", cnt);
-                }
-
-            }
-
-
-        }
-
-        return dst;
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (cameraBridgeViewBase != null) {
-            cameraBridgeViewBase.disableView();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
         if (!OpenCVLoader.initDebug()) {
-            Toast.makeText(getApplicationContext(), "There is a problem", Toast.LENGTH_SHORT).show();
+            Log.e(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), not working.");
         } else {
-            baseLoaderCallback.onManagerConnected(BaseLoaderCallback.SUCCESS);
+            Log.d(this.getClass().getSimpleName(), "  OpenCVLoader.initDebug(), working.");
         }
+
+        // setting onClickListener for the button
+        btnCapture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(captureIntent, Image_Capture_Code); //Image_Capture_Code is a locally defined integer that must be greater than 0
+            }
+        });
+
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (cameraBridgeViewBase != null) {
-            cameraBridgeViewBase.disableView();
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        if (requestCode == Image_Capture_Code){
+            // if image is captured
+            if (resultCode == RESULT_OK){
+                //setting the captures image to the image view
+                Bitmap bp = (Bitmap) data.getExtras().get("data");
+                imgCapture.setImageBitmap(bp);
+                bitmapToMat(bp);
+            }
+            else if (resultCode == RESULT_CANCELED) {
+                //on cancel
+                Toast.makeText(MainActivity.this, "Cancelled", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                Toast.makeText(this, "Some error occured", Toast.LENGTH_SHORT).show();
+            }
+        }
+        else {
+            Toast.makeText(this, "Some error occured", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private static double angle(Point pt1, Point pt2, Point pt0) {
-        double dx1 = pt1.x - pt0.x;
-        double dy1 = pt1.y - pt0.y;
-        double dx2 = pt2.x - pt0.x;
-        double dy2 = pt2.y - pt0.y;
-        return (dx1 * dx2 + dy1 * dy2) / Math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10);
+    // converting bitmap to Mat
+    public void bitmapToMat(Bitmap bitmap){
+        //initialing the image holder
+        initial_image = new Mat();
+        Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Utils.bitmapToMat(bmp32, initial_image);
+//        original_image = initial_image;
+        System.out.println("hamro maal = "+ initial_image.channels());
+        System.out.println("hamro maal size = "+ initial_image.size());
+
+        // converting 4 channel image to 3 channel image
+        Imgproc.cvtColor(initial_image, initial_image, Imgproc.COLOR_BGRA2BGR);
+        System.out.println("Converted channel = "+ initial_image.channels() + " type of image = "+ initial_image.type());
+
+        // getting the rectangle
+        getrectangle(initial_image);
     }
 
-    private void setLabel(Mat im, String label, MatOfPoint contour) {
-        int fontface = Core.FONT_HERSHEY_SIMPLEX;
-        double scale = 3;//0.4;
-        int thickness = 3;//1;
-        int[] baseline = new int[1];
-        Size text = Imgproc.getTextSize(label, fontface, scale, thickness, baseline);
-        Rect r = Imgproc.boundingRect(contour);
-        Point pt = new Point(r.x + ((r.width - text.width) / 2),r.y + ((r.height + text.height) / 2));
-        Imgproc.putText(im, label, pt, fontface, scale, new Scalar(255, 0, 0), thickness);
+    // get rectangle from the Mat image
+    public void getrectangle(Mat matImage){
+
+        // saving the matImage
+        original_image = new Mat();
+        matImage.copyTo(original_image);
+
+        // Defining color range for masking
+        Scalar min_white = new Scalar(96, 13, 180);
+        Scalar max_white = new Scalar(140, 100, 255);
+
+        // converting BGR to RGB
+        Imgproc.cvtColor(matImage, matImage, Imgproc.COLOR_BGR2RGB);
+        System.out.println("Type here = "+ matImage.type());
+
+        // applying gaussian filter
+        Imgproc.GaussianBlur(matImage, matImage, kernelSize, 0);
+
+        // converting to hsv
+        Imgproc.cvtColor(matImage, matImage, Imgproc.COLOR_RGB2HSV);
+
+        // masking
+        Core.inRange(matImage, min_white, max_white, matImage);
+
+
+
+        // -----------------------------------------------------------------------------------------
+//        // convert to bitmap:
+//        Bitmap bm = Bitmap.createBitmap(matImage.cols(), matImage.rows(),Bitmap.Config.ARGB_8888);
+//        Utils.matToBitmap(matImage, bm);
+//
+//        // find the imageview and draw it!
+//        imgCapture.setImageBitmap(bm);
+        // -----------------------------------------------------------------------------------------
+
+
+        // thresholding
+        Imgproc.threshold(matImage, matImage, 127, 255, Imgproc.THRESH_BINARY);
+
+        System.out.println("After threshold = "+ matImage);
+
+
+
+
+        // finding the contour of the thresholded image
+        findContour(matImage, original_image);
     }
+
+    // fing contour
+    public void findContour(Mat matImage, Mat original_image){
+
+        Imgproc.findContours(matImage, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        Rect rect = new Rect();
+
+        //finding the biggest contour
+        Double biggestContourArea = 0.0;
+        for (int i = 0; i < contours.size(); i++) {
+            System.out.println("Contour Area = " +Imgproc.contourArea(contours.get(i)));
+            if (Imgproc.contourArea(contours.get(i)) > biggestContourArea){
+                biggestContourArea = Imgproc.contourArea(contours.get(i));
+                rect = Imgproc.boundingRect(contours.get(i));
+            }
+        }
+
+        // overlay the biggest rectangle
+        Imgproc.rectangle(original_image, new Point(rect.x, rect.y), new Point(rect.x+rect.width, rect.y+rect.height), new Scalar(0,0,255), 5);
+
+
+
+        // -----------------------------------------------------------------------------------------
+        // convert to bitmap:
+        Bitmap bm = Bitmap.createBitmap(original_image.cols(), original_image.rows(),Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(original_image, bm);
+
+        // find the imageview and draw it!
+        imgCapture.setImageBitmap(bm);
+        // -----------------------------------------------------------------------------------------
+
+
+
+    }
+
 
 }
 
