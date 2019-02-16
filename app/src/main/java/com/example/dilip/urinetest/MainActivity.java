@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity  {
             e.printStackTrace();
         }
         System.out.println("hamro maal = "+ initial_image.channels());
-        System.out.println("hamro maal size = "+ initial_image.size());
+        System.out.println("hamro maal type = "+ initial_image.type());
 
         // getting the rectangle
         getrectangle(initial_image);
@@ -291,6 +291,12 @@ public class MainActivity extends AppCompatActivity  {
             Rect roi = new Rect(x, y, xx-x, yy-y);
             Mat cropped = new Mat(newCroppedPatch, roi);
 
+//            Mat croppedPatch = new Mat();
+//            cropped.copyTo(croppedPatch);
+
+            // converting cropped patch to 3 channel
+//            Imgproc.cvtColor(cropped, croppedPatch, Imgproc.COLOR_BGRA2BGR);
+//            System.out.println("cropped type = "+croppedPatch.type());
             // adding the extracted colors to the color list
             color_list.add(getMeanRGB(cropped));
 
